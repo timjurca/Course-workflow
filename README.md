@@ -58,24 +58,20 @@ expensive direction. Saying **regenerate**, **redo** or **write the notes** alwa
 
 ## 2. Install
 
-This plugin is installed **on the account**, not from a directory, so installing
-a new build means installing the built package:
+**From a package.** Download `course-workflow-<version>.plugin` and install it
+through the Claude desktop app's plugin settings. The plugin is installed **on the
+account**, so it is available in every session. To update, install the newer
+package the same way.
 
-```
-New_Claude_Skills/course-workflow.plugin
-```
-
-Build it from this source tree first (bump `version` in
-`.claude-plugin/plugin.json`, then zip the tree), and install that file through
-the Claude desktop app's plugin settings. Every build is also kept in
-`New_Claude_Skills/dist/` under its version number, so an older one can be
-reinstalled.
+**From this source tree.** Bump `version` in `.claude-plugin/plugin.json`, zip the
+tree (leave out `.git/` and `dist/`) and rename the zip to
+`course-workflow-<version>.plugin`, then install that file as above.
 
 For local development you can instead point Claude Code at the source tree
 directly, which skips packaging:
 
 ```bash
-claude --plugin-dir /Users/timjurca/Documents/Obsidian/Personal/New_Claude_Skills/course-workflow
+claude --plugin-dir /path/to/course-workflow
 ```
 
 Then read [`shared/runtime.md`](shared/runtime.md) before the first run. It matters more than it
