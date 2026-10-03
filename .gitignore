@@ -1,0 +1,7 @@
+# build output: packaged .plugin files are rebuilt from this tree
+dist/
+*.plugin
+# python and macOS noise
+__pycache__/
+*.pyc
+.DS_Store
