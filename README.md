@@ -272,12 +272,20 @@ A skill that stops has usually found something real. The checks are hard failure
 | **"no Final_notes file"** | You asked for questions or corrections on a lesson with no notes | Run `course-notes` first |
 | **"the notes are current" fails** | A source changed, or a file was filed since the notes were written | Regenerate that lesson. The report names the file |
 | **"notes predate concept ids"** | Notes written by an older version | Regenerate that lesson once |
-| **"every extraction belongs to this run" fails** | The evidence on disk is from a different version of the material | Regenerate |
+| **"every extraction belongs to this run" fails** | The evidence on disk is from a different version of the material | Regenerate. A notes `run:` written with or without quotes compares the same, so a quoting difference never causes this |
 | **iCloud placeholder** | A file is in the cloud, not downloaded on this machine | Open the folder in Finder and let it download, then retry |
 | **conflicted copy** | iCloud made a duplicate | Move it aside, nothing is ever merged automatically |
 | **`quarantine_breach`** | Tutor prose from `Explanations/` was ingested as course material | Serious. Regenerate that lesson and report it |
 | **a correction is `orphaned`** | The passage it anchored to no longer exists after a rewrite | Re-place it on one of the candidates offered, or leave it orphaned |
 | **"blank chapter range"** | A `Weekly_overview.md` row has no chapters | Fill it in. A blank is never read as "no reading": that would pass the coverage check vacuously |
+
+### `Plain symbols` in the verification report
+
+`course-notes` lists every mathematical symbol it wrote as plain text (`e_P`, `q_11`, `X^(−1/2)`)
+under `Plain symbols` in `.work/D_verification.md`, each with the inline-math form to use instead.
+It never blocks the write. Fix the rows by regenerating the lesson or with `course-corrections`.
+`course-condense` fails its `symbols` check for the same reason, so a revision sheet never copies a
+plain symbol forward.
 
 ### Coverage numbers are not a score
 
@@ -309,6 +317,16 @@ exist.
 **`Explanations/` is quarantined.** Tutor prose is never read back as a source by any other skill.
 `course-setup validate` carries a standing tripwire that verifies this every run, because the
 boundary is maintained in four skills and an edit to one could break it without touching the others.
+
+**Symbols are inline math.** Every symbol in running text, tables, callouts and definitions is
+written `$e_P$`, `$e_{XZ}$`, `$X^{-1/2}$`, never `e_P` or `X^(−1/2)`, which Obsidian shows literally
+and which can turn the words between two underscores italic. A dollar amount in prose is `\$530` or
+`USD 530`, so it never opens a math span. Every skill follows this (`shared/note-invariants.md` §2d).
+
+**Timestamps in frontmatter are quoted.** `run:` and `generated:` are written as
+`run: "2026-11-13T15:31:51"`. Left bare, YAML reads a timestamp with seconds as a date, and a gate
+comparing it with the extractions would see two different runs. The scripts compare runs in one
+normalised form, so older notes with a bare value still work; do not unquote them by hand.
 
 **Your own writing is protected.** `## My additions`, `## My notes` and `## My questions` are yours.
 Every skill preserves them verbatim and `course-corrections` refuses outright to write into them.

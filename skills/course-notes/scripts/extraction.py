@@ -47,6 +47,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[2] / 'shared' / 'scripts'))
 import naming                                                      # noqa: E402
+from runstamp import norm_run                                      # noqa: E402
 
 # note-invariants §2. A single uppercase letter from this set followed at once by
 # a digit is what makes a source marker distinguishable from D's and E's markers
@@ -208,7 +209,9 @@ def read_set(work: Path | str, run: str | None = None,
         h = data['header']
         runs.add(h.get('run'))
         hashes.add(h.get('sources_hash'))
-        if (run and h.get('run') != run) or \
+        # Both sides normalised: `run` may arrive from notes frontmatter that
+        # YAML turned into a datetime (note-invariants §10).
+        if (run and norm_run(h.get('run')) != norm_run(run)) or \
            (sources_hash and h.get('sources_hash') != sources_hash):
             mismatched.append({'path': str(p), 'run': h.get('run'),
                                'sources_hash': h.get('sources_hash')})

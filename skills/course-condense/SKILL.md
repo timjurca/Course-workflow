@@ -19,8 +19,9 @@ enforces the checkable part of it.
 1. Read `shared/runtime.md` and settle where the scripts run. The vault is on the
    user's computer; this plugin is not. Getting this wrong makes every check pass
    against an empty file.
-2. Read `shared/note-invariants.md` §3 and §18. §3 is the marker vocabulary you
-   must carry; §18 is the file you write.
+2. Read `shared/note-invariants.md` §2d, §3 and §18. §2d is how a symbol is
+   written in running text; §3 is the marker vocabulary you must carry; §18 is
+   the file you write.
 3. For a request that might belong elsewhere, read `shared/routing.md`. **A file
    attached to the request is course-setup's first, always.**
 
@@ -151,6 +152,10 @@ the number is something the lesson *states* or something it *computes*.
   blank line before it, renders as a code block: outdent it. On any line that
   also has inline maths, write money as `\$100`, or the first `$` opens a maths
   span that swallows the sentence. `verify.py` fails both.
+- **Symbols are inline maths**, never plain text (`note-invariants.md` §2d):
+  `$e_P$`, `$q_{11}$`, `$X^{-1/2}$`, not `e_P`, `q_11`, `X^(−1/2)`. Notes written
+  before that rule may still carry a plain symbol; wrap it as you copy it. That
+  is formatting, not a change of claim.
 - **Every block links back**: `[[<CODE>_L<NN>_Final_notes#<heading>]]`. That is
   what makes "I do not have to re-read the notes" true, because the one concept
   the student is shaky on is one click away.
@@ -196,7 +201,9 @@ every embed resolves to a real file, every number occurs in the final notes,
 `notes_hash` recorded and matching, the provenance line present when needed, and
 nothing Obsidian would render wrongly (the two layout traps above). A ninth
 check, `contents`, fails any data table (a digit in a cell outside inline maths), any
-arithmetic and any computed amount in inline maths.
+arithmetic and any computed amount in inline maths. A tenth, `symbols`, fails any
+mathematical symbol written as plain text outside inline maths, so a sheet
+copied from older notes cannot carry `e_P` or `X^(−1/2)` forward.
 
 The number check is the projection check with teeth: a rounded percentage, an
 invented statistic or a transposed year fails it, and those are the compression

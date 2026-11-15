@@ -38,6 +38,7 @@ sys.path.insert(0, str(HERE))
 import naming                                                   # noqa: E402
 from renumber import parse_filing_log                           # noqa: E402
 from vault import read_frontmatter, write_frontmatter           # noqa: E402
+from runstamp import norm_run                                      # noqa: E402
 
 UNDONE = Path('_Inbox') / '_undone'
 MTIME_GRACE = timedelta(seconds=120)
@@ -135,7 +136,7 @@ def inspect(course: Path | str) -> dict:
                 fm, _ = read_frontmatter(notes)
             except Exception:
                 continue
-            run = _ts(str(fm.get('run') or fm.get('generated') or ''))
+            run = _ts(norm_run(fm.get('run') or fm.get('generated')))
             if run and ts and run > ts:
                 refusals.append(
                     f'the notes for {key} were written after this batch and depend on '

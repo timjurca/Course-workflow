@@ -42,6 +42,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[2] / 'shared' / 'scripts'))
 sys.path.insert(0, str(HERE))
+from runstamp import norm_run                                      # noqa: E402
 
 MIDDOT = '·'
 
@@ -245,7 +246,7 @@ def needs_replay(entry: dict, notes_run: str | None) -> bool:
     m = re.search(r'run\s+(\S+)', recorded)
     if not m:
         return True
-    return m.group(1) != str(notes_run)
+    return norm_run(m.group(1)) != norm_run(notes_run)
 
 
 def open_entries(data: dict, notes_run: str | None) -> list[dict]:

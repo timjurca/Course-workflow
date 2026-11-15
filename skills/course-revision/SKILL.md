@@ -30,8 +30,9 @@ this skill.
 1. Read `shared/runtime.md` and settle where the scripts run. The vault is on
    the user's computer; this plugin is not. Getting it wrong makes every gate
    pass against an empty directory.
-2. Read `shared/note-invariants.md` §6 (concept IDs), §11 (the extraction
-   contract), §15 (what you may read of a correction log) and §16 (findings).
+2. Read `shared/note-invariants.md` §2d (symbols in running text), §6 (concept
+   IDs), §11 (the extraction contract), §15 (what you may read of a correction
+   log) and §16 (findings).
 3. Read `shared/folder-structure.md` for what exists where, and
    `shared/routing.md` when a request might belong to another skill.
 

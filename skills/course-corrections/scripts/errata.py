@@ -51,6 +51,7 @@ sys.path.insert(0, str(HERE))
 import log as dlog                                                # noqa: E402
 import naming                                                     # noqa: E402
 from vault import read_frontmatter                                # noqa: E402
+from runstamp import norm_run                                      # noqa: E402
 
 ITEM_RE = re.compile(r'^###\s+(?P<id>\S+)\s*$', re.MULTILINE)
 TAGS_RE = re.compile(r'^tags:\s*\[(?P<tags>.*?)\]\s*$', re.MULTILINE)
@@ -128,7 +129,7 @@ def reach(course: Path | str, source: str, lesson: str | None = None) -> dict:
             if name == wanted:
                 citing.append({'lesson': key,
                                'notes': str(notes.relative_to(course)),
-                               'run': fm.get('run')})
+                               'run': norm_run(fm.get('run'))})
                 break
 
     if local:

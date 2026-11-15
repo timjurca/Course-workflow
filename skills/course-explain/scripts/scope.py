@@ -52,6 +52,7 @@ import coverage as cov                                               # noqa: E40
 import ladder                                                        # noqa: E402
 import sections as _sections                                         # noqa: E402
 from vault import read_frontmatter                                   # noqa: E402
+from runstamp import norm_run                                        # noqa: E402
 
 H2_RE = re.compile(r'^##\s+(?P<title>.+?)\s*$', re.MULTILINE)
 CONCEPT_COMMENT_RE = re.compile(r'<!--\s*concept:\s*(?P<id>[a-z0-9-]+)\s*-->')
@@ -129,7 +130,7 @@ def section(course: Path | str, concept: str, lesson: str | None = None) -> dict
             out['sections'].append({
                 'lesson': key, 'file': str(notes.relative_to(course)),
                 'heading': sec['heading'], 'text': sec['body'],
-                'source_ids': ids, 'notes_run': fm.get('run')})
+                'source_ids': ids, 'notes_run': norm_run(fm.get('run')) or None})
             for i in ids:
                 if i not in out['source_ids']:
                     out['source_ids'].append(i)
@@ -155,7 +156,7 @@ def items(course: Path | str, lesson: str, ids: list) -> dict:
         head = text.split('###', 1)[0]
         run = re.search(r'^run:\s*(\S+)', head, re.MULTILINE)
         shash = re.search(r'^sources_hash:\s*(\S+)', head, re.MULTILINE)
-        run = run.group(1) if run else None
+        run = (norm_run(run.group(1)) or None) if run else None
         if run and run not in out['runs']:
             out['runs'].append(run)
         out['files'].append({'file': str(path.relative_to(course)), 'run': run,
@@ -198,7 +199,7 @@ def corrections(course: Path | str, lesson: str) -> dict:
     if notes is not None:
         try:
             fm, _ = read_frontmatter(notes)
-            out['notes_run'] = fm.get('run')
+            out['notes_run'] = norm_run(fm.get('run')) or None
         except Exception:
             pass
     log = folder / 'notes_corrections.md'
@@ -215,7 +216,7 @@ def corrections(course: Path | str, lesson: str) -> dict:
         status = (fields.get('status') or '').strip()
         replayed = fields.get('last_replayed') or ''
         run_m = RUN_RE.search(replayed)
-        replayed_run = run_m.group('run') if run_m else None
+        replayed_run = norm_run(run_m.group('run')) if run_m else None
         needs_replay = (status == 'applied' and out['notes_run']
                         and replayed_run != out['notes_run'])
         in_the_text = status == 'applied' and not needs_replay

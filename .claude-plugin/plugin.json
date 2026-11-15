@@ -1,6 +1,6 @@
 {
   "name": "course-workflow",
-  "version": "1.21.5",
+  "version": "1.22.0",
   "description": "Six skills that run a university course inside an Obsidian vault: structure and filing (course-setup), consolidated notes (course-notes), condensed revision sheets (course-condense), revision questions and mock exams (course-revision), corrections with replay (course-corrections), and a subject tutor (course-explain).",
   "author": {
     "name": "Tim Jurca"

@@ -40,6 +40,7 @@ import gate                                                        # noqa: E402
 import icloud                                                      # noqa: E402
 import naming                                                      # noqa: E402
 import overview as ov                                              # noqa: E402
+from runstamp import norm_run                                      # noqa: E402
 from source_hash import (compare_stat,                             # noqa: E402
                          absolve_annotation_changes)
 from vault import read_frontmatter                                 # noqa: E402
@@ -119,7 +120,7 @@ def one(course: Path, key: str) -> dict:
         row['reasons'].append('the overview or assignment rows changed: '
                               + ', '.join(d['field'] for d in drift))
 
-    corr = gate.open_corrections(folder / 'notes_corrections.md', str(fm.get('run') or ''))
+    corr = gate.open_corrections(folder / 'notes_corrections.md', norm_run(fm.get('run')))
     if corr['blocking'] or corr['warning']:
         row['warnings'].append({'code': 'open_corrections',
                                 'blocking': corr['blocking'],

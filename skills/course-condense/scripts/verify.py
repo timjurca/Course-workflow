@@ -7,7 +7,7 @@ words will, unprompted, tidy a number, round a figure, or supply the connective
 that "obviously" belongs. Each of those turns a summary into a second source
 that quietly disagrees with the first, and nothing downstream would notice.
 
-Nine checks, all mechanical. None of them reads for meaning; they read for
+Ten checks, all mechanical. None of them reads for meaning; they read for
 presence, which is the part a script can actually settle.
 
   concepts     every concept id in the notes appears in the condensed file
@@ -22,6 +22,9 @@ presence, which is the part a script can actually settle.
                that opens an inline-math span and swallows the sentence
   contents     contents, not calculations: no data table, no arithmetic, no worked
                $$ block and no computed amount in inline maths
+  symbols      no mathematical symbol written as plain text (`e_P`, `X^(−1/2)`)
+               outside inline maths: the sheet copies text from the notes and must
+               not carry a plain symbol forward (note-invariants §2d)
 
 `formulas` counts only general formulas. A `$$` block holding a currency sign or
 a decimal number is a worked calculation; it is exempt from coverage and is a
@@ -46,6 +49,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[2] / 'shared' / 'scripts'))
 sys.path.insert(0, str(HERE))
 
+import plain_symbols as PS                                         # noqa: E402
 import sections as S                                               # noqa: E402
 from vault import read_frontmatter                                 # noqa: E402
 
@@ -208,6 +212,12 @@ def check(notes_path: Path | str, condensed_path: Path | str) -> dict:
     # of image readings in the banner. It is derived, so it is exempt -- that
     # exact value and nothing else.
     nnums.add(str(len(PROVENANCE_RE.findall(nbody))))
+    # Notes written before note-invariants §2d may still say `q_11` where this
+    # file correctly writes `$q_{11}$`. That subscript is an index, not a
+    # figure, and wrapping it must not read as a number introduced here.
+    plain_in_notes = PS.scan(nbody)
+    for row in plain_in_notes:
+        nnums |= {_num_key(t) for t in re.findall(r'\d+', row['token'])}
     seen, bad = set(), []
     for tok in NUM_RE.findall(cbody):
         k = _num_key(tok)
@@ -245,6 +255,15 @@ def check(notes_path: Path | str, condensed_path: Path | str) -> dict:
     # contents --------------------------------------------------------------
     problems.extend(_contents_problems(cbody))
 
+    # symbols ---------------------------------------------------------------
+    plain = PS.scan(cbody)
+    for row in plain:
+        problems.append({'check': 'symbols', 'token': row['token'],
+                         'line': row['line'], 'fix': row['fix'],
+                         'why': 'a symbol written as plain text renders literally; '
+                                'write it as inline math, even where the notes '
+                                'still carry it plain'})
+
     return {
         'ok': not problems,
         'notes': notes_path.name, 'condensed': condensed_path.name,
@@ -254,6 +273,8 @@ def check(notes_path: Path | str, condensed_path: Path | str) -> dict:
             'doubt_expected': len(ndoubt), 'doubt_missing': len(missing_d),
             'numbers_checked': len(seen), 'numbers_unmatched': len(bad),
             'provenance_in_notes': nprov,
+            'plain_symbols': len(plain),
+            'plain_symbols_in_notes': len(plain_in_notes),
             'words_notes': len(nbody.split()), 'words_condensed': len(cbody.split()),
             'compression': (round(len(nbody.split()) / max(1, len(cbody.split())), 1)),
         },

@@ -14,14 +14,14 @@ inputs:
   assignment_rows: [{{assignment_rows}}]
   errata: [{{errata}}]
 sources_stat:
-  - {path: {{source_path}}, size: {{source_size}}, mtime: {{source_mtime}}}
+  - {path: {{source_path}}, size: {{source_size}}, mtime: "{{source_mtime}}"}
 coverage: {{coverage}}
 highlights: {{highlights}}
 exam_signals: []
 assessed_in: []
 flags: [{{flags}}]
-generated: {{generated}}
-run: {{run}}
+generated: "{{generated}}"
+run: "{{run}}"
 generator: course-notes v1
 ---
 

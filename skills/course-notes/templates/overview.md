@@ -6,7 +6,7 @@ date: {{date}}
 title: {{title}}
 sources: [{{slides, transcript, book, notes}}]
 coverage: {{coverage}}
-generated: {{generated}}
+generated: "{{generated}}"
 generator: course-notes v1
 ---
 

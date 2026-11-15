@@ -125,6 +125,15 @@ outside that path.
 
 ---
 
+## 2d. Symbols in running text (all skills)
+
+Every mathematical symbol that any skill writes outside a display formula (in prose, tables,
+callouts, blockquotes, definitions, questions, answers and explanations alike) is inline math,
+`$e_P$`, `$e_{XZ}$`, `$X^{-1/2}$`, never plain text such as `e_P` or `X^(−1/2)`, and a literal
+dollar amount in prose is written `\$530` or `USD 530` so that it cannot open a math span.
+
+---
+
 ## 2a. The judgement marker (B)
 
 `[judgement]` marks a line as **Claude's opinion about what matters**, not a statement taken from a
@@ -437,7 +446,7 @@ detecting. B resolves per run from the sources of the lesson it is processing.
 | `sources_hash` | B | `shared/scripts/source_hash.py` | Hash over the **contents** of every file in `sources:`, **including PDF annotation layers**. Annotating a chapter is therefore itself a reason to re-run. |
 | `sources_stat` | B | B | `{path, size, mtime}` per source, so C can check freshness without reading any source. |
 | `inputs` | B | B | The run's non-file inputs: the lesson's `Weekly_overview` row, every `## Assignments` row listing this lesson, and the id and `right` text of every D erratum covering this lesson's sources. |
-| `run` | B | B | Timestamp identifying one B run. The extractions carry the same value. |
+| `run` | B | B | Timestamp identifying one B run. The extractions carry the same value. Written **quoted** in frontmatter (`run: "2026-11-13T15:31:51"`). |
 
 **What `sources_hash` does not catch.** It covers contents, so renaming a lesson folder or renumbering
 a lesson changes nothing it sees. `inputs` catches the renumber, because the overview row's `No` cell
@@ -453,6 +462,12 @@ changed. A says so at the time of the renumber as well.
   the earlier row makes this lesson stale too.
 - Everywhere a file name is compared or a `sources_stat` path is looked up, the leading `<CODE>_`
   token is ignored.
+- **Timestamps are written quoted** in frontmatter: `run`, `generated` and a `sources_stat`
+  `mtime`. A bare `2026-11-13T15:31:51` is read by YAML as a datetime, prints back as
+  `2026-11-13 15:31:51`, and then no longer equals the same `run` in an extraction header.
+- **Every comparison of `run` values normalises both sides** with
+  `shared/scripts/runstamp.py` → `norm_run()`, never `str()`, so notes written before the quoting
+  rule (an unquoted value YAML already turned into a datetime) still compare equal.
 
 **"Needs replay" is derived, never stored** ([§15](#15-the-correction-log)).
 
@@ -733,10 +748,10 @@ H2 sections, each optional and present only when it has rows: `Unplaced`, `Uncit
 `Sections with no concept ID`, `Numbered headings`, `Extraction set disagrees with this run`,
 `Malformed IDs`, `Down-weighted highlights`, `Uncertain readings`, `Broken links`,
 `Unsupported specifics`, `Source spelling disagreements`, `Attribution in prose`,
-`Judgement zone`, `Judgement drift`, `Summary line`, `Figures`, `Formulas`.
+`Judgement zone`, `Judgement drift`, `Summary line`, `Figures`, `Formulas`, `Plain symbols`.
 
-`Unsupported specifics`, `Source spelling disagreements` and `Attribution in prose` are the
-**writing gates**. Pass C is model work, so a rule stated only in SKILL.md is advice; each of these is
+`Unsupported specifics`, `Source spelling disagreements`, `Attribution in prose` and
+`Plain symbols` are the **writing gates**. Pass C is model work, so a rule stated only in SKILL.md is advice; each of these is
 written by the model and checked by `verify.py`.
 
 `Formulas` checks that every display formula uses notation a priority-1 source
@@ -744,6 +759,12 @@ uses, and that each of its symbols is explained in a legend directly below it. A
 formula is reproduced like a table, in the source's own notation: restating a
 book's worked arithmetic in symbols it never used is a claim wearing a source
 marker.
+
+`Plain symbols` enforces [§2d](#2d-symbols-in-running-text-all-skills) in the body: a token shaped
+`<1-3 letters>_<1-4 alphanumerics>` or `<letter>^(...)` outside inline math, display math, code,
+wikilinks, embeds, markdown links, HTML and URLs. File-name-like tokens (an `L<NN>`/`T<NN>` part,
+an attachment name), source markers and the protected blocks are not flagged. Each row's backticked
+token is the plain symbol, followed by its line and the inline-math form to write instead.
 
 `Judgement zone` is the fifth gate and covers `## What to remember`: every bullet carries
 `[judgement]`, the marker appears nowhere else in the file, the top tier holds at most ten items, the

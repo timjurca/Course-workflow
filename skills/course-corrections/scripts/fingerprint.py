@@ -47,6 +47,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[2] / 'shared' / 'scripts'))
 sys.path.insert(0, str(HERE))
 import log as dlog                                               # noqa: E402
+from runstamp import norm_run                                      # noqa: E402
 from anchor import normalise, sections                           # noqa: E402
 
 WIKILINK_RE = re.compile(r'\[\[(?P<target>[^\]\|#]*)'
@@ -83,7 +84,7 @@ def notes_hash(notes: str) -> str:
 
 def notes_run(notes: str) -> str | None:
     m = re.search(r'^run:\s*(.+?)\s*$', notes, re.MULTILINE)
-    return m.group(1).strip().strip('"\'') if m else None
+    return norm_run(m.group(1)) if m else None
 
 
 def _entry(state: dict, lesson: str) -> dict | None:
@@ -103,7 +104,7 @@ def check(course: Path | str, lesson: str, notes_path: Path | str) -> dict:
                 'hand_edit': False,
                 'message': 'first corrections run on this lesson: no baseline, '
                            'nothing to compare'}
-    if recorded.get('run') == now['run']:
+    if norm_run(recorded.get('run')) == norm_run(now['run']):
         if recorded.get('hash') == now['hash']:
             return {'state': 'unchanged', 'lesson': lesson, 'now': now,
                     'recorded': recorded, 'hand_edit': False}
