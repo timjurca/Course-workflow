@@ -72,7 +72,8 @@ A normal run embeds figures as part of Pass C and never needs this. It exists
 because Pass D's `Figures` gate flags a lesson that read images and showed none,
 and a gate whose only remedy is "rewrite the whole document" is a bad gate.
 
-Trigger: the student asks for figures on a lesson, or the gate flagged one. It
+Trigger: the student asks for figures on a lesson, or the `Figures` or
+`Described but not shown` gate flagged one. It
 is **never** part of a normal run.
 
 **What it may change, and what checks that.** Two kinds of edit are legal:
@@ -105,8 +106,12 @@ are exactly the ones whose last run left no `from image, verify` markers to work
 from, so anchoring on those markers would make the pass work only where it is
 least needed. Decide from the images themselves.
 
-Render **the union of check 2b's list and every slide id already carrying
-`from image, verify` in the notes.** Neither alone is enough: 2b missed slide 14
+Render **the union of check 2b's list, every slide id already carrying
+`from image, verify` in the notes, and every id the `Described but not shown`
+gate reports** (`python3 scripts/verify.py described --notes <notes>.md`). The
+gate adds what the other two miss: a figure the prose, a callout or a caption
+already describes, including a student sketch, whose file sits in
+`attachments/` unembedded. Neither of the first two alone is enough: 2b missed slide 14
 of LTM lesson 3, which the notes cite from an image and which turned out to be
 one of the six figures worth having, while the markers alone sit on 43 mostly
 prose lines and make a far worse shortlist than looking at the pictures. Reuse
@@ -123,11 +128,23 @@ and leave the notes alone.
 own file. Not `D_verification.md`: `verify.py` rewrites that wholesale on the
 next run and would delete the only trace of the judgement no script can check.
 List each image as embedded or rejected **with the clause that decided it**:
-decoration, a repeat of a diagram already embedded, an ordinary table
+decoration, a repeat of a diagram already embedded (in the narrow sense of
+[Figures](#figures-show-them-do-not-only-describe-them)), an ordinary table
 reproduced structurally, or already written out in the prose beside it. On the
 first real run the clause that did nearly all the work was the last one: on
 notes that thorough, almost every picture had already been transcribed, and it
 took 28 candidates down to 6.
+
+Every **rejected** image also states `prose describes it: yes` or `no`: does
+any text in the notes, a callout or a caption included, describe that image's
+specific visual content? A rejection with `yes` is a defect, not a judgement:
+embed the image, or report the text as a finding for `course-corrections` to
+rewrite, because this pass may not reword it.
+
+```markdown
+- `EF_L02_fig_S5.1_substitution.png` rejected: repeat of the embedded lecture-note figure; prose describes it: no
+- `EF_L02_fig_S2.1_budget_rotation.png` embedded under "Budget line rotation"
+```
 
 **Embedding a figure can make the prose around it stale**, and the contract
 gives you no legal way to fix it. "Two figures set up the argument" reads wrong
@@ -141,7 +158,14 @@ yet, insert the whole `> [!note] Your note` block: a callout wrapper is one of
 the legal insertion shapes precisely so this case is reachable. `N` and `C` items are never a standalone
 claim ([source-hierarchy](references/source-hierarchy.md) §1), and putting the
 image inside the callout inherits that for free, so a hand-drawn sketch can
-never be read back as the lecturer's.
+never be read back as the lecturer's. When the callout talks about the sketch,
+rejecting the sketch as a repeat is not an option (see
+[Figures](#figures-show-them-do-not-only-describe-them)).
+
+**Render a student-note figure from the PDF at 200 dpi or more before you crop
+it**, with `ocr.py pdf --path <notes>.pdf --pages N-N --out <lesson>/.work/renders`
+(250 dpi). Never crop from the low-resolution page render used for reading or
+mark detection: handwriting cropped from it is unreadable once embedded.
 
 **Parallel-safe, unlike a regeneration.** The pass writes only the notes file,
 `Final_notes/attachments/` and `.work/`. It never touches `terms.json`,
@@ -401,6 +425,22 @@ them. Describing one and leaving it out asks the student to trust a paraphrase
 of exactly the thing a paraphrase loses. **Figures come from the slides or the
 book, and the ones that carry content go into the notes.**
 
+**Described means shown. This rule comes first and overrides every reason
+below for leaving a figure out.** If the prose, a callout or a caption describes
+a figure's **specific visual content** (its shape, axes, intercepts, labelled
+points, colours, the labels one source uses as against another's, "on the
+sketch", "the slide shows"), that figure **is embedded next to that text**. The
+only other way out is to rewrite the text so it no longer depends on the
+picture. A paraphrase of a picture the reader cannot see is the exact failure
+this section exists to prevent: EF lesson 2 described slide 2's intercepts in
+detail, argued about the labels on slides 5 and 6, and quoted "on the sketch",
+and showed none of the three.
+
+- A student sketch that a `Your note` callout refers to is embedded **inside
+  that callout**, as the priority-3 rule requires. It is never rejected as a
+  repeat while the callout talks about it.
+- Pass D's `Described but not shown` gate reports what this rule missed.
+
 **A figure earns its place when any of these holds:**
 
 - the notes argue *from* it, and the claim cannot be checked without seeing it
@@ -425,7 +465,10 @@ book, and the ones that carry content go into the notes.**
   reuses one pattern figure across six slides needs it once, and the one worth
   keeping is whichever copy adds something (an arrow, a moved marker). This
   clause does more work than any other: on EBT lesson 6 it took the candidates
-  from thirteen to four
+  from thirteen to four. **It applies only when the embedded copy shows the
+  same elements with the same labels that the text discusses.** Two diagrams
+  of one concept with different labels, or two steps of one argument (the
+  budget line rotating, then the optimum moving from A to B), are not repeats
 
 **How, in the body, beside the claim it supports:**
 
@@ -465,9 +508,10 @@ reversed is confidently wrong and undetectable at revision time.
 Pass D's `Figures` gate checks the mechanics: that every embed points at a file
 that exists, that each one carries a caption and a source marker, and that a
 lesson which read five or more items off rendered images embedded at least one
-of them. It cannot judge which figures are worth showing, so that judgement is
-yours, and the run report says how many you embedded against how many images
-you read.
+of them. Its sibling, `Described but not shown`, flags a figure the text
+describes and the section does not show. Neither can judge which figures are
+worth showing, so that judgement is yours, and the run report says how many you
+embedded against how many images you read.
 
 ### The one-line summary
 
@@ -718,6 +762,7 @@ stated only in prose decays:
 | `Formulas` | a display formula using symbols no slide, book or handout uses, or one whose symbols are not explained in a legend directly below it | copy the source's notation; write one legend line per symbol |
 | `Plain symbols` | a `<1-3 letters>_<1-4 alphanumerics>` or `<letter>^(...)` token in the body outside inline or display maths, code, wikilinks, embeds, links, HTML and URLs; file-name-like tokens, source markers and the protected blocks are skipped | wrap it as the row says: `$e_P$`, `$e_{XZ}$`, `$X^{-1/2}$` |
 | `Judgement zone` | a bullet with no `[judgement]`, the marker outside the zone, more than ten in `Must know`, a missing callout, a missing or misplaced ranking pair, an H3 in the zone | fix the zone; none of it blocks the write |
+| `Described but not shown` | a source id the text points at as a picture (cited `from image` or `OCR`; an `N`/`C` item in a callout that mentions a sketch or drawing; or a paragraph saying `Figure N`, `slide N shows` or `on the sketch`) whose image is in `Final_notes/attachments/` and is not embedded in the same H3 section | embed it beside the text, a student sketch inside its callout, or rewrite the text so it no longer depends on the picture |
 | `Summary line` | `**In one line:**` missing from the notes or the overview, or the two texts differing | write the one sentence, identically, in both |
 
 None of them blocks the write. They are reported, and the run report says

@@ -101,7 +101,8 @@ whose alignment is the point. Decoration is not shown.
 | **Embed** | `![[<filename>]]` on its own line, in the body, beside the claim it supports. |
 | **Caption** | One italic sentence directly under it saying what it shows, ending with the figure's source marker. Required: it is what survives a lost file or a reader with images off, and it is what makes the figure searchable. |
 | **Coverage** | A figure's id counts like any other extraction item. Embedding it does not exempt it from being cited, and citing it does not require embedding it. |
-| **Who** | B writes them. D checks the mechanics (file exists, caption present, marker present, and that a lesson which read five or more items off images embedded at least one). Neither judges which figures are worth showing. |
+| **Described means shown** | Text that describes a figure's **specific visual content** (its shape, axes, intercepts, labelled points, colours, one source's labels as against another's, "on the sketch", "the slide shows") requires that figure embedded beside the text, or the text rewritten so it no longer depends on the picture. This takes precedence over every reason for leaving a figure out. A student's sketch that a `Your note` callout talks about is embedded inside that callout. |
+| **Who** | B writes them. D checks the mechanics (file exists, caption present, marker present, and that a lesson which read five or more items off images embedded at least one) and flags a figure the text describes without showing (`Described but not shown`, §16). Neither judges which figures are worth showing. |
 
 The failure this prevents: LTM lesson 3 carried 45 `[…, from image, verify]` readings and embedded no
 figure at all. Every picture it had read was available to its writer and to nobody else, and the
@@ -748,10 +749,11 @@ H2 sections, each optional and present only when it has rows: `Unplaced`, `Uncit
 `Sections with no concept ID`, `Numbered headings`, `Extraction set disagrees with this run`,
 `Malformed IDs`, `Down-weighted highlights`, `Uncertain readings`, `Broken links`,
 `Unsupported specifics`, `Source spelling disagreements`, `Attribution in prose`,
-`Judgement zone`, `Judgement drift`, `Summary line`, `Figures`, `Formulas`, `Plain symbols`.
+`Judgement zone`, `Judgement drift`, `Summary line`, `Figures`, `Formulas`, `Plain symbols`,
+`Described but not shown`.
 
-`Unsupported specifics`, `Source spelling disagreements`, `Attribution in prose` and
-`Plain symbols` are the **writing gates**. Pass C is model work, so a rule stated only in SKILL.md is advice; each of these is
+`Unsupported specifics`, `Source spelling disagreements`, `Attribution in prose`,
+`Plain symbols` and `Described but not shown` are the **writing gates**. Pass C is model work, so a rule stated only in SKILL.md is advice; each of these is
 written by the model and checked by `verify.py`.
 
 `Formulas` checks that every display formula uses notation a priority-1 source
@@ -765,6 +767,14 @@ marker.
 wikilinks, embeds, markdown links, HTML and URLs. File-name-like tokens (an `L<NN>`/`T<NN>` part,
 an attachment name), source markers and the protected blocks are not flagged. Each row's backticked
 token is the plain symbol, followed by its line and the inline-math form to write instead.
+
+`Described but not shown` enforces the **Described means shown** rule of
+[§2b](#2b-figures-b) in the body. It flags a source id when the text points at a picture of it (the
+id is cited `from image` or `OCR`; or it is an `N`/`C` item in a callout that mentions a sketch or
+drawing; or its paragraph says `Figure N`, `slide N shows` or `on the sketch`), an image file for
+that id exists in `Final_notes/attachments/`, and no embed of that file appears in the same H3
+section. Each row's backticked token is the source id, followed by the section, the trigger and the
+attachment that is not shown.
 
 `Judgement zone` is the fifth gate and covers `## What to remember`: every bullet carries
 `[judgement]`, the marker appears nowhere else in the file, the top tier holds at most ten items, the

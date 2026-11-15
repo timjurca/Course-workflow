@@ -287,6 +287,15 @@ It never blocks the write. Fix the rows by regenerating the lesson or with `cour
 `course-condense` fails its `symbols` check for the same reason, so a revision sheet never copies a
 plain symbol forward.
 
+### `Described but not shown` in the verification report
+
+When the notes describe a picture (an intercept, a labelled point, "the slide shows", "on the
+sketch") whose image is already in `Final_notes/attachments/` but is not embedded in that section,
+`course-notes` lists it under `Described but not shown` in `.work/D_verification.md`. It never
+blocks the write. Ask for "add the figures to L03": the figures pass embeds the flagged images, a
+student sketch inside its `Your note` callout. Text that only made sense with the picture and cannot
+take one goes to `course-corrections` to be reworded.
+
 ### Coverage numbers are not a score
 
 `coverage: 664/664` means every extracted item was placed and cited. It does **not** mean every
