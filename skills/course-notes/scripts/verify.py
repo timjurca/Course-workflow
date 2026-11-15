@@ -36,6 +36,7 @@ CLI:
     verify.py check --work <.work> --notes <notes.md> [--spine <B_spine.md>]
                     [--discarded S03 T09] [--run <ts>] [--hash <h>]
     verify.py report --work <.work> --notes <notes.md> [...] --apply
+    verify.py described --notes <notes.md>
 """
 from __future__ import annotations
 
@@ -597,6 +598,148 @@ def figure_check(body: str, notes: Path, body_fm: dict | None = None) -> dict:
             'problems': problems, 'clean': not problems}
 
 
+# --- described but not shown -------------------------------------------------
+# A figure the text describes and does not show is the failure the figures
+# rules exist to prevent, and the rejection clauses kept producing it: EF lesson
+# 2 explained slide 2's intercepts in detail and left the picture out as a
+# "repeat" of a different diagram, argued about slides 5 and 6's own labels
+# against a figure that carries other labels, and quoted "on the sketch" from a
+# Your note callout whose sketch was never embedded. Every image file was
+# already in attachments/. This gate puts those three triggers next to the one
+# fact a script can settle: the file exists and is not embedded where the text
+# talks about it.
+
+ATTACH_ID_RE = re.compile(r'_fig_(?P<id>[SBTAHNCVKG]\d+(?:\.\d+)*n?!?)(?=[_.])')
+FIG_MARKER_RE = re.compile(r'\[([^\[\]\n]*\b(?:from image|OCR)\b[^\[\]\n]*)\]', re.I)
+SKETCH_RE = re.compile(r'\b(?:sketch|drawing|drawn|drew|hand-drawn)\w*', re.I)
+FIG_REF_RE = re.compile(
+    r'\b(?:fig(?:ure)?\.?\s+\d+(?:\.\d+)?)\b'
+    r'|\bslides?\s+\d+(?:\s*(?:,|and|&)\s*\d+)*\s+(?:shows?|show|depicts?|draws?)\b'
+    r'|\bon the (?:sketch|drawing)\b'
+    r'|\bthe (?:slide|sketch|figure|drawing) shows\b', re.I)
+SLIDE_NUM_RE = re.compile(r'\bslides?\s+(\d+(?:\s*(?:,|and|&)\s*\d+)*)', re.I)
+# Not material: the judgement zone, the student's block, the list of gaps.
+DNS_SKIP_H2 = {'what to remember', 'my additions', 'uncovered material'}
+
+
+def _attachments_by_id(notes: Path) -> dict:
+    """`EF_L02_fig_S2.1_budget.png` -> {'S2.1': ['EF_L02_fig_S2.1_budget.png']}."""
+    att = notes.parent / 'attachments'
+    out: dict = {}
+    if att.is_dir():
+        for f in sorted(att.iterdir()):
+            m = ATTACH_ID_RE.search(f.name) if f.is_file() else None
+            if m:
+                out.setdefault(m.group('id'), []).append(f.name)
+    return out
+
+
+def _files_for(item_id: str, by_id: dict) -> list:
+    """Attachments of an id, of its sub-items, or of the slide it sits on.
+
+    `slide 2 shows` names `S2` while the file is `S2.1`; a reading cited
+    `S12.3` may have been rendered as the whole slide, `S12`.
+    """
+    host = _host(item_id)
+    out = []
+    for aid, files in by_id.items():
+        if aid == host or aid.startswith(host + '.') or host.startswith(aid + '.'):
+            out.extend(files)
+    return sorted(set(out))
+
+
+def _h3_sections(body: str) -> list[dict]:
+    """The body cut at every H2 and H3; an H4 stays inside its H3."""
+    out, cur, h2 = [], None, ''
+    for n, line in enumerate(body.split('\n'), 1):
+        m = re.match(r'^(#{2,3})\s+(.+?)\s*$', line)
+        if m:
+            if m.group(1) == '##':
+                h2 = m.group(2).strip()
+            cur = {'heading': m.group(2).strip(), 'h2': h2, 'line': n, 'lines': []}
+            out.append(cur)
+            continue
+        if cur is not None:
+            cur['lines'].append((n, line))
+    return out
+
+
+def _paragraphs(lines: list) -> list[tuple[int, str, bool]]:
+    """(first line, text, is a callout) for each blank-line-separated block.
+
+    A callout is its own block even without a blank line around it, so the
+    sketch a `Your note` callout talks about is matched to that callout's ids.
+    """
+    out, buf, start, quote = [], [], None, None
+    def flush():
+        if buf:
+            out.append((start, '\n'.join(buf), bool(quote)))
+    for n, line in lines:
+        q = line.lstrip().startswith('>')
+        if not line.strip() or (buf and q != quote):
+            flush()
+            buf, start, quote = [], None, None
+            if not line.strip():
+                continue
+        if not buf:
+            start, quote = n, q
+        buf.append(line)
+    flush()
+    return out
+
+
+def described_not_shown(body: str, notes: Path) -> list[dict]:
+    """Source ids whose figure the text describes, has on disk, and never shows."""
+    by_id = _attachments_by_id(notes)
+    if not by_id:
+        return []
+    clean = FENCE_RE.sub(lambda m: '\n' * m.group(0).count('\n'), body)
+    clean = re.sub(r'`[^`\n]*`', '', clean)
+    rows = []
+    for sec in _h3_sections(clean):
+        if sec['h2'].lower() in DNS_SKIP_H2:
+            continue
+        text = '\n'.join(l for _, l in sec['lines'])
+        embedded = {t.strip() for t in re.findall(r'!\[\[([^\]|]+?)(?:\|[^\]]*)?\]\]', text)}
+        hits: dict = {}
+        for start, para, callout in _paragraphs(sec['lines']):
+            ids_here = [i for b in BRACKET_RE.findall(_scrub(para))
+                        for i in classify_bracket(b)['ids']]
+            for b in FIG_MARKER_RE.findall(para):
+                for i in classify_bracket(b)['ids']:
+                    trig = 'from image' if 'from image' in b.lower() else 'OCR'
+                    hits.setdefault(i, (start, trig))
+            if callout and SKETCH_RE.search(para):
+                for i in ids_here:
+                    if i[0] in 'NC':
+                        hits.setdefault(i, (start, 'callout mentions a sketch'))
+            ref = FIG_REF_RE.search(para)
+            if ref:
+                for i in ids_here:
+                    hits.setdefault(i, (start, f'"{ref.group(0)}"'))
+                for grp in SLIDE_NUM_RE.findall(ref.group(0)):
+                    for num in re.findall(r'\d+', grp):
+                        hits.setdefault(f'S{num}', (start, f'"{ref.group(0)}"'))
+        # One row per missing picture: `slide 2 shows` (S2) and the cited
+        # `[S2.1, from image]` point at the same file, and the cited id is the
+        # one D can act on, so it leads and the triggers are merged.
+        merged: dict = {}
+        for item_id, (line, trig) in sorted(
+                hits.items(), key=lambda kv: (kv[1][0], kv[1][1].startswith('"'))):
+            files = _files_for(item_id, by_id)
+            if not files or any(f in embedded for f in files):
+                continue
+            key = tuple(files)
+            if key in merged:
+                if trig not in merged[key]['trigger']:
+                    merged[key]['trigger'] += f'; {trig}'
+                continue
+            merged[key] = {'id': item_id, 'line': line, 'section': sec['heading'],
+                           'trigger': trig, 'files': files}
+        rows.extend(merged.values())
+    return rows
+
+
 def check(work: Path | str, notes: Path | str, spine: Path | str | None = None,
           discarded: list[str] | None = None, run: str | None = None,
           sources_hash: str | None = None) -> dict:
@@ -655,6 +798,7 @@ def check(work: Path | str, notes: Path | str, spine: Path | str | None = None,
         'attribution': attribution_in_prose(body),
         'formulas': formula_check(body, p1_text),
         'plain_symbols': plain_symbols.scan(body),
+        'described_not_shown': described_not_shown(body, notes),
     }
     figures = figure_check(body, notes, body_fm)
     gate = judgement.check(body)
@@ -846,6 +990,18 @@ def render_report(result: dict, extras: dict | None = None) -> str:
                   for x in ps[:60]] + ['']
         if len(ps) > 60:
             lines += [f'- ... {len(ps) - 60} more', '']
+    if w.get('described_not_shown'):
+        dn = w['described_not_shown']
+        lines += [f"## Described but not shown ({len(dn)})", '',
+                  'The text describes a figure that is in `attachments/` and not '
+                  'embedded in that section, so the reader gets a paraphrase of '
+                  'a picture they cannot see. Embed it beside the text (a '
+                  'student sketch inside its `Your note` callout), or rewrite '
+                  'the text so it no longer depends on the picture '
+                  '(note-invariants §2b).', '']
+        lines += [f"- `{x['id']}` line {x['line']}, section \"{x['section']}\": "
+                  f"{x['trigger']}; not embedded: "
+                  + ', '.join(f'`{n}`' for n in x['files']) for x in dn] + ['']
     f = r.get('figures') or {}
     if f.get('problems'):
         lines += [f"## Figures ({len(f['problems'])})", '',
@@ -925,6 +1081,9 @@ def write_report(work: Path | str, result: dict, extras: dict | None = None,
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest='cmd', required=True)
+    p = sub.add_parser('described', help='only the Described but not shown '
+                                         'gate, for the figures pass')
+    p.add_argument('--notes', required=True)
     for name in ('check', 'report'):
         p = sub.add_parser(name)
         p.add_argument('--work', required=True)
@@ -939,6 +1098,15 @@ def main(argv=None) -> int:
             p.add_argument('--apply', action='store_true')
     args = ap.parse_args(argv)
 
+    if args.cmd == 'described':
+        notes = Path(args.notes)
+        _fm, body = read_frontmatter(notes)
+        rows = described_not_shown(body, notes)
+        json.dump({'notes': str(notes), 'count': len(rows),
+                   'described_not_shown': rows}, sys.stdout,
+                  ensure_ascii=False, indent=2)
+        sys.stdout.write('\n')
+        return 0
     out = check(args.work, args.notes, args.spine, args.discarded,
                 args.run, args.hash)
     if args.cmd == 'report':
