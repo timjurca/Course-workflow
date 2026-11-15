@@ -47,6 +47,7 @@ import icloud                                                        # noqa: E40
 import naming                                                        # noqa: E402
 import overview as ov                                                # noqa: E402
 import source_hash                                                   # noqa: E402
+from runstamp import norm_run                                        # noqa: E402
 from vault import course_identity, read_frontmatter                  # noqa: E402
 
 ANNOUNCE = {
@@ -119,7 +120,7 @@ def notes_state(course: Path | str, key: str) -> dict:
         out['state'] = 'stale'
         out['reasons'].append(f'frontmatter unreadable: {exc}')
         return out
-    out['run'] = fm.get('run')
+    out['run'] = norm_run(fm.get('run')) or None
     out['sources'] = fm.get('sources') or []
     out['flags'] = fm.get('flags') or []
     stat_cmp = source_hash.compare_stat(course, fm.get('sources_stat') or [], folder)

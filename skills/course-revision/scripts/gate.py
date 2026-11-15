@@ -57,6 +57,7 @@ import overview as ov                                              # noqa: E402
 from source_hash import (compare_stat, split_entry,                # noqa: E402
                          absolve_annotation_changes)
 from vault import read_config, read_frontmatter                    # noqa: E402
+from runstamp import norm_run                                      # noqa: E402
 
 CONCEPT_RE = re.compile(r'<!--\s*concept:\s*([a-z0-9][a-z0-9-]*)\s*-->')
 WIKILINK_RE = re.compile(r'\[\[([^\]\|#]*)')
@@ -211,7 +212,8 @@ def open_corrections(path: Path | str, notes_run: str | None) -> dict:
         elif st == 'orphaned':
             warning.append({'id': e['id'], 'why': 'orphaned: nothing to replay '
                                                   'until the passage is re-placed'})
-        elif st == 'applied' and notes_run and e['replayed_run'] != notes_run:
+        elif st == 'applied' and notes_run and \
+                norm_run(e['replayed_run']) != norm_run(notes_run):
             blocking.append({'id': e['id'],
                              'why': f'needs replay: last replayed against run '
                                     f'{e["replayed_run"] or "(none recorded)"}, '
@@ -369,7 +371,8 @@ def check(course: Path | str, key: str, vault: Path | str | None = None,
         return _finish(course, key, action, checks, [])
 
     # 5 extractions ---------------------------------------------------------
-    want_run = str(nfm.get('run') or '')
+    # Normalised, never str(): see note-invariants §10.
+    want_run = norm_run(nfm.get('run'))
     want_hash = str(nfm.get('sources_hash') or '')
     missing, mismatched = [], []
     work = folder / '.work'
@@ -379,7 +382,7 @@ def check(course: Path | str, key: str, vault: Path | str | None = None,
             missing.append(entry)
             continue
         head = _extraction_header(p)
-        if head.get('run') != want_run or head.get('sources_hash') != want_hash:
+        if norm_run(head.get('run')) != want_run or head.get('sources_hash') != want_hash:
             mismatched.append({'entry': entry, 'file': p.name,
                                'run': head.get('run'), 'sources_hash': head.get('sources_hash')})
     ext_ok = not missing and not mismatched

@@ -46,6 +46,7 @@ from source_hash import (compare_stat, split_entry,               # noqa: E402
                          absolve_annotation_changes)
 from vault import read_config, read_frontmatter, find_vault       # noqa: E402
 from anchor import CONCEPT_RE                                     # noqa: E402
+from runstamp import norm_run                                      # noqa: E402
 
 LESSON_RE = re.compile(r'^(?P<kind>[LT])(?P<num>\d{2})$')
 HEADER_RE = re.compile(r'^(?P<key>run|sources_hash):\s*(?P<value>.+?)\s*$', re.MULTILINE)
@@ -173,7 +174,10 @@ def run(course: Path | str, lesson: str, vault: Path | str | None = None,
         return {'ok': False, 'stopped_at': 3, 'checks': checks}
     nfm, _ = read_frontmatter(notes)
     sources = nfm.get('sources') or []
-    run_id = str(nfm.get('run') or '')
+    # Normalised, never str(): a bare `run:` with seconds reaches us as a
+    # datetime whose str() has a space, and every extraction then looked like
+    # it came from another run (note-invariants §10).
+    run_id = norm_run(nfm.get('run'))
     shash = str(nfm.get('sources_hash') or '')
 
     # 4 --------------------------------------------------------------------
@@ -185,7 +189,7 @@ def run(course: Path | str, lesson: str, vault: Path | str | None = None,
             missing.append(str(ex.relative_to(course)))
             continue
         head = dict(HEADER_RE.findall(ex.read_text(encoding='utf-8')[:2000]))
-        if head.get('run') != run_id or head.get('sources_hash') != shash:
+        if norm_run(head.get('run')) != run_id or head.get('sources_hash') != shash:
             mismatched.append({'file': str(ex.relative_to(course)),
                                'extraction': head,
                                'notes': {'run': run_id, 'sources_hash': shash}})

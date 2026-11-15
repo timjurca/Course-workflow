@@ -45,6 +45,7 @@ import coverage as cov                                               # noqa: E40
 import ladder                                                        # noqa: E402
 import scope                                                         # noqa: E402
 from vault import course_identity, parse_frontmatter                 # noqa: E402
+from runstamp import norm_run                                        # noqa: E402
 
 ANCHOR_LINK_RE = re.compile(r'\[\[(?P<target>[^\]\|#]+)#(?P<anchor>[^\]\|]+)'
                             r'(?:\|(?P<alias>[^\]]+))?\]\]')
@@ -77,17 +78,17 @@ def check(course: Path | str, concept: str) -> dict:
     concepts = cov.load_concepts(course)
     entry = concepts.get(concept) or {}
     out['lessons'] = fm.get('lessons') or []
-    out['notes_run'] = fm.get('notes_run')
+    out['notes_run'] = norm_run(fm.get('notes_run')) or None
 
     # 1. the notes moved on
     for key in out['lessons']:
         state = ladder.notes_state(course, key)
-        current = state.get('run')
-        if current and fm.get('notes_run') and current != fm['notes_run']:
+        current = norm_run(state.get('run'))
+        if current and out['notes_run'] and current != out['notes_run']:
             out['reasons'].append({
                 'code': 'notes_rerun', 'lesson': key,
                 'message': (f'the notes for {key} were re-run '
-                            f'({fm["notes_run"]} -> {current})'),
+                            f'({out["notes_run"]} -> {current})'),
                 'say': 'your saved explanation predates the current notes'})
 
     # 2. a cited source ID no longer exists

@@ -621,6 +621,24 @@ The rewrite is usually shorter and clearer. 75 words to 33, same IDs cited:
   `verify.py` checks both halves against the priority-1 extractions. It reads
   one and two character identifiers and Greek macros; words inside `\text{}`
   are prose and are not checked, so a step labelled *corporate tax* is fine.
+- **Every mathematical symbol in running text is inline math**
+  (`note-invariants.md` §2d). Definitions, concept prose, tables, callouts,
+  blockquotes, exercises and `## What to remember` follow the same rule as a
+  `$$` block's legend. Obsidian shows a plain `e_P` literally, and two
+  underscores on one line can turn the words between them italic.
+
+  | Write | Never |
+  |---|---|
+  | `$e_P$`, `$r_E$`, `$P_0$` | `e_P`, `r_E`, `P_0` |
+  | `$e_{XZ}$`, `$q_{11}$`, `$Y_{OLD}$`, `$Div_1$` | `e_XZ`, `q_11`, `Y_OLD` |
+  | `$X^{-1/2}$`, with an ASCII minus inside the maths | `X^(−1/2)` |
+  | `\$530` or `USD 530` | `$530` |
+
+  A subscript or superscript of more than one character goes in braces. A
+  verbatim quote from a source keeps its words, but the symbols inside it are
+  still wrapped: that is formatting, not rewording. A literal dollar amount in
+  prose never opens a math span. `verify.py` reports what it finds under
+  `Plain symbols`.
 - **A student note earns a callout only when it adds or diverges.** A note that
   duplicates a source is cited inline on the sentence it duplicates; coverage is
   satisfied without interrupting the concept. In a callout that does survive,
@@ -689,7 +707,7 @@ flagged gap beat no notes.
 (`[B §15.1]` matches nothing), flags a tier marker found in a notes file as a
 quarantine failure, and flags numbered headings and sections with no concept ID.
 
-**Five writing gates run here too**, because Pass C is model work and a rule
+**The writing gates run here too**, because Pass C is model work and a rule
 stated only in prose decays:
 
 | Section | Fires on | Pass C's answer |
@@ -698,10 +716,11 @@ stated only in prose decays:
 | `Source spelling disagreements` | two authoritative sources spelling one proper noun differently, both outside the general word list | use the **majority** form and add a warning callout naming both |
 | `Attribution in prose` | *the lecturer*, *a student*, *he says* and friends, outside a blockquote and outside `## Definitions` | rewrite as the claim |
 | `Formulas` | a display formula using symbols no slide, book or handout uses, or one whose symbols are not explained in a legend directly below it | copy the source's notation; write one legend line per symbol |
+| `Plain symbols` | a `<1-3 letters>_<1-4 alphanumerics>` or `<letter>^(...)` token in the body outside inline or display maths, code, wikilinks, embeds, links, HTML and URLs; file-name-like tokens, source markers and the protected blocks are skipped | wrap it as the row says: `$e_P$`, `$e_{XZ}$`, `$X^{-1/2}$` |
 | `Judgement zone` | a bullet with no `[judgement]`, the marker outside the zone, more than ten in `Must know`, a missing callout, a missing or misplaced ranking pair, an H3 in the zone | fix the zone; none of it blocks the write |
 | `Summary line` | `**In one line:**` missing from the notes or the overview, or the two texts differing | write the one sentence, identically, in both |
 
-None of the five blocks the write. They are reported, and the run report says
+None of them blocks the write. They are reported, and the run report says
 how many survived.
 
 `verify.py` also reports **judgement drift**: what entered and left `Must know`
@@ -771,7 +790,12 @@ replay step.
 
 Frontmatter carries `sources`, `sources_hash`, `sources_stat`, `inputs`,
 `coverage`, `highlights`, `exam_signals`, `assessed_in`, `flags`, `generated`,
-`run`, `generator`. Get all four source values from one call:
+`run`, `generator`. **Write `run:` and `generated:` quoted**, in the notes and
+in the overview, as the templates do: `run: "2026-11-13T15:31:51"`. Bare, a
+timestamp with seconds is read by YAML as a datetime, no longer equals the
+same `run` in the `.work/A_*.md` headers, and every gate that checks the
+extractions against the notes fails (`note-invariants.md` §10). Get all four
+source values from one call:
 
 ```bash
 python3 scripts/preflight.py sources --course <c> --lesson L03 --sources <entry> ...

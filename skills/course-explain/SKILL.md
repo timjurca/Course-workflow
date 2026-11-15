@@ -47,7 +47,7 @@ step you already know you are taking.
 
 1. Read `shared/runtime.md`. The vault is on the user's computer; this plugin is
    not. Getting this wrong makes every check pass against an empty directory.
-2. Read `shared/folder-structure.md` §9 and `shared/note-invariants.md` §4, §5,
+2. Read `shared/folder-structure.md` §9 and `shared/note-invariants.md` §2d, §4, §5,
    §8, §15, §16. They pin your markers, your banner, your quarantine and exactly
    which lines of another skill's files you may read.
 3. Resolve the course once per conversation with `shared/scripts/vault.py` and

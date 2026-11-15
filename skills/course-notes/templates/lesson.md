@@ -13,15 +13,15 @@ inputs:
   assignment_rows: [{{assignment_rows}}]
   errata: [{{errata}}]
 sources_stat:
-  - {path: {{source_path}}, size: {{source_size}}, mtime: {{source_mtime}}}
+  - {path: {{source_path}}, size: {{source_size}}, mtime: "{{source_mtime}}"}
 coverage: {{coverage}}
 highlights: {{highlights}}
 exam_signals:
   - {text: "{{signal_text}}", concept: "{{signal_concept}}", source: "{{signal_source}}"}
 assessed_in: [{assignment: "{{assignment_no}}", task: {{task_no}}, concept: "{{task_concept}}"}]
 flags: [{{flags}}]
-generated: {{generated}}
-run: {{run}}
+generated: "{{generated}}"
+run: "{{run}}"
 generator: course-notes v1
 ---
 

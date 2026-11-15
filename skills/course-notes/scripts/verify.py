@@ -53,6 +53,7 @@ sys.path.insert(0, str(HERE.parents[2] / 'shared' / 'scripts'))
 sys.path.insert(0, str(HERE))
 import extraction                                                  # noqa: E402
 import judgement                                                   # noqa: E402
+import plain_symbols                                               # noqa: E402
 from vault import read_frontmatter                                 # noqa: E402
 
 REPORT_NAME = 'D_verification.md'
@@ -331,7 +332,9 @@ def spine_ids(path: Path | str) -> dict:
             'discarded': discarded}
 
 
-# --- the three writing gates -------------------------------------------------
+# --- the writing gates -------------------------------------------------------
+# (`Plain symbols` lives in shared/scripts/plain_symbols.py, because
+# course-condense runs the same check on the revision sheet.)
 # Pass C is model work, so these exist for the same reason Pass D does: an
 # instruction in SKILL.md is advice, and advice decays. Each rule below is
 # written by the model and checked here.
@@ -651,6 +654,7 @@ def check(work: Path | str, notes: Path | str, spine: Path | str | None = None,
         'spelling_conflicts': spelling_conflicts(p1_text),
         'attribution': attribution_in_prose(body),
         'formulas': formula_check(body, p1_text),
+        'plain_symbols': plain_symbols.scan(body),
     }
     figures = figure_check(body, notes, body_fm)
     gate = judgement.check(body)
@@ -831,6 +835,17 @@ def render_report(result: dict, extras: dict | None = None) -> str:
             lines += [f"- `{x['kind']}` line {x['line']}: {x['symbols']} "
                       f"-> `{x['formula']}`"]
         lines += ['']
+    if w.get('plain_symbols'):
+        ps = w['plain_symbols']
+        lines += [f"## Plain symbols ({len(ps)})", '',
+                  'A mathematical symbol in running text is inline math '
+                  '(note-invariants §2d). Written as plain text, Obsidian shows '
+                  'it literally, and two underscores on one line can turn the '
+                  'words between them italic.', '']
+        lines += [f"- `{x['token']}` line {x['line']} -> {x['fix']}: {x['text']}"
+                  for x in ps[:60]] + ['']
+        if len(ps) > 60:
+            lines += [f'- ... {len(ps) - 60} more', '']
     f = r.get('figures') or {}
     if f.get('problems'):
         lines += [f"## Figures ({len(f['problems'])})", '',
