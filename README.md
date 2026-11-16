@@ -10,9 +10,13 @@ from your own material.
 (`[[...]]`), embedded images, callout boxes and math. In another Markdown app the text is readable;
 those parts do not display.
 
+course-workflow is an independent project and is not affiliated with or endorsed by Anthropic.
+"Claude" is a trademark of Anthropic.
+
 This is the instruction manual. It assumes no knowledge of the plugin.
 
 - [Requirements](#requirements)
+- [Use it responsibly](#use-it-responsibly)
 - [Quick start](#quick-start)
 - [1. What it does](#1-what-it-does)
 - [2. Install](#2-install)
@@ -41,6 +45,21 @@ This is the instruction manual. It assumes no knowledge of the plugin.
 
 The plugin cannot work without access to the vault. Claude in a browser, with no folder connected,
 can only tell you so.
+
+---
+
+## Use it responsibly
+
+**Your course's rules come first.** Check what your university and each course allow for AI tools.
+The plugin never solves, outlines or hints at assignments, but how you use the rest is your
+responsibility.
+
+**Keep the notes to yourself.** Generated notes quote your slides and textbooks verbatim and include
+their figures. That is fine for your own study; do not publish or share them.
+
+**Check before you rely on it.** The notes are checked for coverage, not for truth. The license
+provides the plugin "as is", without warranty; when something looks wrong, check the source and fix
+it with `course-corrections`.
 
 ---
 
@@ -107,6 +126,9 @@ Download `course-workflow-<version>.plugin` from the [Releases page](https://git
 add it in Claude under **Customize → Plugins → Add → Upload plugin**. The plugin is installed **on
 your account**, so it is available in every conversation. To update, upload the newer file the same
 way.
+
+Uploading recordings or slides to an AI service may be restricted by your university; the plugin
+sends your material to Claude for processing.
 
 **Connect the vault in every conversation that uses the plugin.** The plugin and your vault are
 usually on two different machines: the plugin lives where Claude runs, your vault lives on your
