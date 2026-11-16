@@ -1,10 +1,19 @@
 # course-workflow
 
-Six skills that run a university course inside an Obsidian vault: filing, study notes,
-condensed revision sheets, revision questions and mock exams, corrections, and a subject tutor.
+A Claude plugin that runs a university course inside an Obsidian vault. You hand it your slides,
+transcripts, readings and own notes; it files them, writes one consolidated study document per
+lesson, checks that nothing was left out, and then helps you revise: condensed revision sheets,
+practice questions and mock exams, corrections that survive a rewrite, and a tutor that explains
+from your own material.
 
-This is the instruction manual. It assumes you have a vault and no knowledge of the plugin.
+**Built for Obsidian.** Everything it writes is Markdown, but it relies on Obsidian's links
+(`[[...]]`), embedded images, callout boxes and math. In another Markdown app the text is readable;
+those parts do not display.
 
+This is the instruction manual. It assumes no knowledge of the plugin.
+
+- [Requirements](#requirements)
+- [Quick start](#quick-start)
 - [1. What it does](#1-what-it-does)
 - [2. Install](#2-install)
 - [3. Set up your first course](#3-set-up-your-first-course)
@@ -14,8 +23,44 @@ This is the instruction manual. It assumes you have a vault and no knowledge of 
 - [7. When something blocks you](#7-when-something-blocks-you)
 - [8. The rules that bite](#8-the-rules-that-bite)
 - [9. Undo and recovery](#9-undo-and-recovery)
-- [10. Maintaining the plugin](#10-maintaining-the-plugin)
+- [10. Developing the plugin](#10-developing-the-plugin)
 - [11. Design rules](#11-design-rules)
+
+---
+
+## Requirements
+
+- **[Obsidian](https://obsidian.md)** and a vault, which is a folder on your own computer. A new,
+  empty vault is fine. Syncing it (iCloud, Obsidian Sync, anything else) is optional.
+- **Claude with plugins.** Either the **Claude desktop app** with your vault folder connected to the
+  conversation, or **Claude Code** running on the same computer as the vault. Which plans include
+  plugins: see [Use plugins in Claude](https://support.claude.com/en/articles/13837440-use-plugins-in-claude).
+- **Your course material as files:** slides (`.pptx` or `.pdf`), transcripts, the textbook as a PDF
+  or EPUB, articles, your own notes. Claude asks before it installs any extra Python package a
+  format needs.
+
+The plugin cannot work without access to the vault. Claude in a browser, with no folder connected,
+can only tell you so.
+
+---
+
+## Quick start
+
+1. **Install the plugin.** Download the newest `.plugin` file from the
+   [Releases page](https://github.com/timjurca/Course-workflow-plugin-claude/releases/latest). In Claude, go to **Customize → Plugins → Add → Upload
+   plugin** and choose it.
+2. **Connect your vault.** In the Claude desktop app, start a conversation and add your vault
+   folder to it.
+3. **Create a course.** Say **"set up a new course"** and have the syllabus at hand. Claude asks a
+   few questions and builds the folders.
+4. **Hand over the first lesson's material.** Say **"file these"** with the files attached, or put
+   them in the course's `_Inbox/` folder and say **"file my inbox"**. You approve a plan before
+   anything moves.
+5. **Write the notes.** Say **"write the notes for L01"**. When they are done, try **"condense L01"**
+   for a revision sheet, or **"quiz me on L01"**.
+
+From there, [the weekly rhythm](#5-the-weekly-rhythm) is the routine, and
+[what to say, per job](#6-what-to-say-per-job) lists the requests each part understands.
 
 ---
 
@@ -58,32 +103,21 @@ expensive direction. Saying **regenerate**, **redo** or **write the notes** alwa
 
 ## 2. Install
 
-**From a package.** Download `course-workflow-<version>.plugin` and install it
-through the Claude desktop app's plugin settings. The plugin is installed **on the
-account**, so it is available in every session. To update, install the newer
-package the same way.
+Download `course-workflow-<version>.plugin` from the [Releases page](https://github.com/timjurca/Course-workflow-plugin-claude/releases/latest) and
+add it in Claude under **Customize → Plugins → Add → Upload plugin**. The plugin is installed **on
+your account**, so it is available in every conversation. To update, upload the newer file the same
+way.
 
-**From this source tree.** Bump `version` in `.claude-plugin/plugin.json`, zip the
-tree (leave out `.git/` and `dist/`) and rename the zip to
-`course-workflow-<version>.plugin`, then install that file as above.
+**Connect the vault in every conversation that uses the plugin.** The plugin and your vault are
+usually on two different machines: the plugin lives where Claude runs, your vault lives on your
+computer. Every script in this plugin walks the vault, so without access it would report an empty
+course; instead it stops and says so. The details are in [`shared/runtime.md`](shared/runtime.md).
 
-For local development you can instead point Claude Code at the source tree
-directly, which skips packaging:
-
-```bash
-claude --plugin-dir /path/to/course-workflow
-```
-
-Then read [`shared/runtime.md`](shared/runtime.md) before the first run. It matters more than it
-sounds: **the plugin and the vault are usually on two different machines.** The plugin lives where
-Claude runs; your vault lives on your computer. Every script in this plugin walks the vault, so a
-script that cannot see it does not fail loudly, it reports an empty course and every check passes
-against nothing.
-
-The fix is automatic but you should know it happened: the script bundle installs once into
-`<vault>/.course-plugin/`, a dotted folder Obsidian ignores completely. It travels with the vault
-through iCloud, so every machine you use has it. Claude checks `<vault>/.course-plugin/VERSION`
-against the plugin version and refreshes when they differ.
+**One thing appears in your vault that you did not make:** the first time it runs, the plugin
+copies its scripts into `<vault>/.course-plugin/`, a dotted folder Obsidian does not show. That is
+where the checks actually run. If your vault syncs, the folder syncs with it, so every computer you
+use has it. Claude compares `<vault>/.course-plugin/VERSION` with the installed plugin and refreshes
+the folder after an update. Leave it in place.
 
 ---
 
@@ -319,9 +353,10 @@ many lessons of one course at once.
 **Deletion is off.** No script in this plugin deletes anything. `course-setup undo` moves files to
 `_Inbox/_undone/`, which intake never picks up again, rather than removing them. If a real delete is needed you are asked once, per folder, and it is permanent with no Trash.
 
-**The vault is iCloud-synced**, which has three consequences: a deletion reaches every device in
-seconds, a file may be a placeholder rather than real content, and Python must be told not to write `__pycache__` into your vault. The scripts handle the third; the first two are why the checks above
-exist.
+**If your vault syncs through iCloud**, that has three consequences: a deletion reaches every
+device in seconds, a file may be a placeholder rather than real content, and Python must be told not
+to write `__pycache__` into your vault. The scripts handle the third; the first two are why the
+checks above exist. A vault that does not sync skips all three.
 
 **`Explanations/` is quarantined.** Tutor prose is never read back as a source by any other skill.
 `course-setup validate` carries a standing tripwire that verifies this every run, because the
@@ -336,6 +371,9 @@ and which can turn the words between two underscores italic. A dollar amount in 
 `run: "2026-11-13T15:31:51"`. Left bare, YAML reads a timestamp with seconds as a date, and a gate
 comparing it with the extractions would see two different runs. The scripts compare runs in one
 normalised form, so older notes with a bare value still work; do not unquote them by hand.
+
+**One Claude conversation per vault at a time.** Two conversations working in the same vault share
+the script folder and the course-wide records, and neither can see what the other is doing.
 
 **Your own writing is protected.** `## My additions`, `## My notes` and `## My questions` are yours.
 Every skill preserves them verbatim and `course-corrections` refuses outright to write into them.
@@ -358,7 +396,18 @@ the reversal unsafe: notes regenerated, a revision file written, a hand edit det
 
 ---
 
-## 10. Maintaining the plugin
+## 10. Developing the plugin
+
+For changing the plugin itself. Using it needs none of this.
+
+**Build a package from this repository.** Bump `version` in `.claude-plugin/plugin.json`, zip the
+tree (leave out `.git/`, `.claude/` and `dist/`), name it `course-workflow-<version>.plugin` and
+install it as above. For local development, Claude Code can load the source tree directly, which
+skips packaging:
+
+```bash
+claude --plugin-dir /path/to/course-workflow
+```
 
 The code lives in three places and they are not the same:
 
@@ -375,9 +424,6 @@ fix that is not running.
 To release: bump `version` in `.claude-plugin/plugin.json` **and** `<vault>/.course-plugin/VERSION`
 together, then rebuild the package from the source tree. The bundle refreshes when the two versions
 differ, so a release built from a tree missing a hotfix will silently overwrite it.
-
-**Do not run two Claude sessions against one vault** unless you know what each is touching. They
-share the script bundle and the per-course registries, and neither can see the other.
 
 ---
 
@@ -399,7 +445,7 @@ These are the constraints the code is built around. They explain why it behaves 
 - **Two matches are as much a failure as none.** Anything that locates a passage returns every
   occurrence and never picks between them.
 
-## Layout
+## Repository layout
 
 ```
 course-workflow/
