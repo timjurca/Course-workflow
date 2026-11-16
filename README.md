@@ -66,7 +66,7 @@ it with `course-corrections`.
 ## Quick start
 
 1. **Install the plugin.** Download the newest `.plugin` file from the
-   [Releases page](https://github.com/timjurca/Course-workflow-plugin-claude/releases/latest). In Claude, go to **Customize → Plugins → Add → Upload
+   [Releases page](https://github.com/timjurca/Course-workflow/releases/latest). In Claude, go to **Customize → Plugins → Add → Upload
    plugin** and choose it.
 2. **Connect your vault.** In the Claude desktop app, start a conversation and add your vault
    folder to it.
@@ -122,7 +122,7 @@ expensive direction. Saying **regenerate**, **redo** or **write the notes** alwa
 
 ## 2. Install
 
-Download `course-workflow-<version>.plugin` from the [Releases page](https://github.com/timjurca/Course-workflow-plugin-claude/releases/latest) and
+Download `course-workflow-<version>.plugin` from the [Releases page](https://github.com/timjurca/Course-workflow/releases/latest) and
 add it in Claude under **Customize → Plugins → Add → Upload plugin**. The plugin is installed **on
 your account**, so it is available in every conversation. To update, upload the newer file the same
 way.
