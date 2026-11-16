@@ -1,6 +1,6 @@
 # course-workflow
 
-A Claude plugin that runs a university course inside an Obsidian vault. You hand it your slides,
+A Claude Pro plugin that runs a university course inside an Obsidian vault. You hand it your slides,
 transcripts, readings and own notes; it files them, writes one consolidated study document per
 lesson, checks that nothing was left out, and then helps you revise: condensed revision sheets,
 practice questions and mock exams, corrections that survive a rewrite, and a tutor that explains
@@ -32,7 +32,7 @@ This is the instruction manual. It assumes no knowledge of the plugin.
 
 - **[Obsidian](https://obsidian.md)** and a vault, which is a folder on your own computer. A new,
   empty vault is fine. Syncing it (iCloud, Obsidian Sync, anything else) is optional.
-- **Claude with plugins.** Either the **Claude desktop app** with your vault folder connected to the
+- **Claude Pro or higher.** Either the **Claude desktop app** with your vault folder connected to the
   conversation, or **Claude Code** running on the same computer as the vault. Which plans include
   plugins: see [Use plugins in Claude](https://support.claude.com/en/articles/13837440-use-plugins-in-claude).
 - **Your course material as files:** slides (`.pptx` or `.pdf`), transcripts, the textbook as a PDF
