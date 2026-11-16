@@ -11,5 +11,6 @@
     "notes",
     "revision",
     "university"
-  ]
+  ],
+  "license": "MIT"
 }
